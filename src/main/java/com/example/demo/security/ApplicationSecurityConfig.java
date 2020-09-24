@@ -3,6 +3,8 @@
  */
 package com.example.demo.security;
 
+import java.util.concurrent.TimeUnit;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -54,7 +56,11 @@ public class ApplicationSecurityConfig  extends WebSecurityConfigurerAdapter{
             //.httpBasic();
             .formLogin()
             .loginPage("/login").permitAll()
-            .defaultSuccessUrl("/courses", true);
+            .defaultSuccessUrl("/courses", true)
+            .and()
+            .rememberMe()
+                .tokenValiditySeconds((int)TimeUnit.DAYS.toSeconds(21))
+                .key("securitykey"); //MD5 hash encode key
     }
     
     @Override
