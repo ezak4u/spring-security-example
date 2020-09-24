@@ -8,8 +8,11 @@ import java.util.concurrent.TimeUnit;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
+import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.core.userdetails.User;
@@ -19,6 +22,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
+
+import com.example.demo.auth.ApplicationUserService;
 
 /**
  * @author ezak4
@@ -30,13 +35,17 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 public class ApplicationSecurityConfig  extends WebSecurityConfigurerAdapter{
     
     private final PasswordEncoder passwordEncoder;
+    private final ApplicationUserService applicationUserService;
     
     /**
-     * 
+     * @param passwordEncoder
+     * @param applicationUserService
      */
-    public ApplicationSecurityConfig( PasswordEncoder passwordEncoder) {
-        this.passwordEncoder = passwordEncoder;
+    public ApplicationSecurityConfig(PasswordEncoder passwordEncoder,ApplicationUserService applicationUserService) {
+        this.passwordEncoder        = passwordEncoder;
+        this.applicationUserService = applicationUserService;
     }
+
     
     @Override
     protected void configure(HttpSecurity http) throws Exception {
@@ -75,26 +84,15 @@ public class ApplicationSecurityConfig  extends WebSecurityConfigurerAdapter{
     }
     
     @Override
+    protected void configure(AuthenticationManagerBuilder auth) throws Exception {
+        auth.authenticationProvider(daoAuthenticationProvider());
+    }
+    
     @Bean
-    protected UserDetailsService userDetailsService() {
-        UserDetails userDetail1 = User.builder()
-                                    .username("ezak")
-                                    .password(passwordEncoder.encode("password"))
-                                    //.roles(ApplicationUserRole.STUDENT.name()) //ROLE_STUDENT
-                                    .authorities(ApplicationUserRole.STUDENT.getGrantedAuthority())
-                                    .build();
-        UserDetails userDetail2 = User.builder()
-                                    .username("muthu")
-                                    .password(passwordEncoder.encode("password123"))
-                                    //.roles(ApplicationUserRole.ADMIN.name()) //ROLE_ADMIN
-                                    .authorities(ApplicationUserRole.ADMIN.getGrantedAuthority())
-                                    .build();
-        UserDetails userDetail3 = User.builder()
-                                    .username("worldstar")
-                                    .password(passwordEncoder.encode("password123"))
-                                    //.roles(ApplicationUserRole.ADMINTRAINEE.name()) //ROLE_ADMINTRAINE
-                                    .authorities(ApplicationUserRole.ADMINTRAINEE.getGrantedAuthority())
-                                    .build();
-        return new InMemoryUserDetailsManager(userDetail1,userDetail2,userDetail3);
+    public DaoAuthenticationProvider daoAuthenticationProvider() {
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setPasswordEncoder(passwordEncoder);
+        provider.setUserDetailsService(applicationUserService);
+        return provider;
     }
 }
