@@ -56,12 +56,15 @@ public class ApplicationSecurityConfig  extends WebSecurityConfigurerAdapter{
             .and()
             //.httpBasic();
             .formLogin()
-            .loginPage("/login").permitAll()
-            .defaultSuccessUrl("/courses", true)
+                .loginPage("/login").permitAll()
+                .usernameParameter("username")
+                .passwordParameter("password")
+                .defaultSuccessUrl("/courses", true)
             .and()
             .rememberMe()
                 .tokenValiditySeconds((int)TimeUnit.DAYS.toSeconds(21))
                 .key("securitykey")//MD5 hash encode key
+                .rememberMeParameter("remember-me")
             .and()
             .logout()
                 .logoutUrl("/logout")
