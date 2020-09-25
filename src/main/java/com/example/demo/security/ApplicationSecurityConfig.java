@@ -3,10 +3,10 @@
  */
 package com.example.demo.security;
 
-import java.util.concurrent.TimeUnit;
-
 import javax.crypto.SecretKey;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -17,7 +17,6 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import com.example.demo.auth.ApplicationUserService;
 import com.example.demo.jwt.JWTUsernamePasswordAuthenticationFilter;
@@ -42,11 +41,12 @@ public class ApplicationSecurityConfig  extends WebSecurityConfigurerAdapter{
      * @param passwordEncoder
      * @param applicationUserService
      */
-    public ApplicationSecurityConfig(PasswordEncoder passwordEncoder,ApplicationUserService applicationUserService, JwtConfig jwtConfig,SecretKey secretKey) {
-        this.jwtConfig = jwtConfig;
-        this.secretKey = secretKey;
+    @Autowired
+    public ApplicationSecurityConfig(PasswordEncoder passwordEncoder,ApplicationUserService applicationUserService,SecretKey secretKey, JwtConfig jwtConfig ) {
         this.passwordEncoder        = passwordEncoder;
         this.applicationUserService = applicationUserService;
+        this.jwtConfig = jwtConfig; 
+        this.secretKey = secretKey;
     }
 
     
@@ -102,5 +102,6 @@ public class ApplicationSecurityConfig  extends WebSecurityConfigurerAdapter{
         provider.setPasswordEncoder(passwordEncoder);
         provider.setUserDetailsService(applicationUserService);
         return provider;
-    }
+    }    
+   
 }
