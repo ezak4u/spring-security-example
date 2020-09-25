@@ -5,6 +5,8 @@ package com.example.demo.security;
 
 import java.util.concurrent.TimeUnit;
 
+import javax.crypto.SecretKey;
+
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
@@ -19,6 +21,7 @@ import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import com.example.demo.auth.ApplicationUserService;
 import com.example.demo.jwt.JWTUsernamePasswordAuthenticationFilter;
+import com.example.demo.jwt.JwtConfig;
 import com.example.demo.jwt.JwtTokenVerifier;
 
 /**
@@ -32,12 +35,16 @@ public class ApplicationSecurityConfig  extends WebSecurityConfigurerAdapter{
     
     private final PasswordEncoder passwordEncoder;
     private final ApplicationUserService applicationUserService;
+    private final JwtConfig jwtConfig;
+    private final SecretKey secretKey;   
     
     /**
      * @param passwordEncoder
      * @param applicationUserService
      */
-    public ApplicationSecurityConfig(PasswordEncoder passwordEncoder,ApplicationUserService applicationUserService) {
+    public ApplicationSecurityConfig(PasswordEncoder passwordEncoder,ApplicationUserService applicationUserService, JwtConfig jwtConfig,SecretKey secretKey) {
+        this.jwtConfig = jwtConfig;
+        this.secretKey = secretKey;
         this.passwordEncoder        = passwordEncoder;
         this.applicationUserService = applicationUserService;
     }
@@ -52,8 +59,8 @@ public class ApplicationSecurityConfig  extends WebSecurityConfigurerAdapter{
             .sessionManagement()
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             .and()
-            .addFilter(new JWTUsernamePasswordAuthenticationFilter(authenticationManager()))
-            .addFilterAfter(new JwtTokenVerifier(), JWTUsernamePasswordAuthenticationFilter.class)
+            .addFilter(new JWTUsernamePasswordAuthenticationFilter(authenticationManager(),jwtConfig,secretKey))
+            .addFilterAfter(new JwtTokenVerifier(jwtConfig,secretKey), JWTUsernamePasswordAuthenticationFilter.class)
             .authorizeRequests()
             .antMatchers("/","/css/*","/js/*").permitAll()
             .antMatchers("/api/**").hasRole(ApplicationUserRole.STUDENT.name())

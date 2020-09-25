@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.crypto.SecretKey;
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -26,29 +27,42 @@ import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jws;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 
 /**
  * @author ezak4
  *
  */
 public class JwtTokenVerifier extends OncePerRequestFilter{
+    
+    private final JwtConfig jwtConfig;
+    private final SecretKey secretKey;   
+    
+
+    /**
+     * @param jwtConfig
+     * @param secretKey
+     */
+    public JwtTokenVerifier(JwtConfig jwtConfig, SecretKey secretKey) {
+        this.jwtConfig = jwtConfig;
+        this.secretKey = secretKey;
+    }
+
+
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)  throws ServletException, IOException {
-        String autherizationHeader = request.getHeader("Autherization");
+        String autherizationHeader = request.getHeader(jwtConfig.getAutherizationHeader());
         
-        if(Strings.isNullOrEmpty(autherizationHeader) || !autherizationHeader.startsWith("Bearer ")) {
+        if(Strings.isNullOrEmpty(autherizationHeader) || !autherizationHeader.startsWith(jwtConfig.getTokenPrefix())) {
             filterChain.doFilter(request, response);
             return;
         }
         
-        String token = autherizationHeader.replaceAll("Bearer ", "");
+        String token = autherizationHeader.replaceAll(jwtConfig.getTokenPrefix(), "");
         
         try {
-            String secretKey = "securesecuresecuresecuresecuresecuresecuresecuresecuresecure";
             Jws<Claims> jwsClaims = Jwts.parser()
-                                        .setSigningKey(Keys.hmacShaKeyFor(secretKey.getBytes()))
+                                        .setSigningKey(secretKey)
                                         .parseClaimsJws(token);
             Claims body = jwsClaims.getBody();
             String username = body.getSubject();
